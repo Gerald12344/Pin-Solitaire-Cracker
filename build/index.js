@@ -1,5 +1,16 @@
-import { writeFileSync } from 'fs';
-let boardMain: boolean[][] = [
+"use strict";
+var __spreadArray = (this && this.__spreadArray) || function (to, from, pack) {
+    if (pack || arguments.length === 2) for (var i = 0, l = from.length, ar; i < l; i++) {
+        if (ar || !(i in from)) {
+            if (!ar) ar = Array.prototype.slice.call(from, 0, i);
+            ar[i] = from[i];
+        }
+    }
+    return to.concat(ar || Array.prototype.slice.call(from));
+};
+exports.__esModule = true;
+var fs_1 = require("fs");
+var boardMain = [
     /* 0  */ [null, null, null, null, null, null, null, null, null, null, null],
     /* 1  */ [null, null, null, null, null, null, null, null, null, null, null],
     /* 2  */ [null, null, null, null, true, true, true, null, null, null, null],
@@ -12,93 +23,81 @@ let boardMain: boolean[][] = [
     /* 9  */ [null, null, null, null, null, null, null, null, null, null, null],
     /* 10 */ [null, null, null, null, null, null, null, null, null, null, null],
 ];
-
-let bestListOfMoves: { location: { x: number; y: number }; to: { x: number; y: number } }[] = [];
-
-let best = 1000;
-let bestBoard = boardMain;
-let itts = 0;
-let completeBoards: boolean[][][] = [];
-
+var bestListOfMoves = [];
+var best = 1000;
+var bestBoard = boardMain;
+var itts = 0;
+var completeBoards = [];
 // Pin Sodoku Solver
 // Pins can just over each other
-let mainFunc = (boardIn: boolean[][]) => {
-    let board = [...boardIn];
+var mainFunc = function (boardIn) {
+    var board = __spreadArray([], boardIn, true);
     itts++;
-
-    function checkPossibleSolutions(row: number, column: number): number[][] {
-        let val = board[row][column];
+    function checkPossibleSolutions(row, column) {
+        var val = board[row][column];
         if (val === null || val === false) {
             return [];
         }
-        let possibleSolutions: number[][] = [];
-
+        var possibleSolutions = [];
         // Check Left
-        let leftItem = board[row][column - 1];
-        let leftItem2 = board[row][column - 2];
+        var leftItem = board[row][column - 1];
+        var leftItem2 = board[row][column - 2];
         if (leftItem !== null && leftItem2 !== null) {
             if (leftItem === true && leftItem2 === false) {
                 possibleSolutions.push([row, column - 2]);
             }
         }
-
         // Check Right
-        let rightItem = board[row][column + 1];
-        let rightItem2 = board[row][column + 2];
+        var rightItem = board[row][column + 1];
+        var rightItem2 = board[row][column + 2];
         if (rightItem !== null && rightItem2 !== null) {
             if (rightItem === true && rightItem2 === false) {
                 possibleSolutions.push([row, column + 2]);
             }
         }
-
         // Check Up
-        let upItem = board[row - 1][column];
-        let upItem2 = board[row - 2][column];
+        var upItem = board[row - 1][column];
+        var upItem2 = board[row - 2][column];
         if (upItem !== null && upItem2 !== null) {
             if (upItem === true && upItem2 === false) {
                 possibleSolutions.push([row - 2, column]);
             }
         }
-
         // Check Down
-        let downItem = board[row + 1][column];
-        let downItem2 = board[row + 2][column];
+        var downItem = board[row + 1][column];
+        var downItem2 = board[row + 2][column];
         if (downItem !== null && downItem2 !== null) {
             if (downItem === true && downItem2 === false) {
                 possibleSolutions.push([row + 2, column]);
             }
         }
-
         return possibleSolutions;
     }
-
     function CalculateAllPosibleMoves() {
-        let possibleMoves: { location: { x: number; y: number }; to: { x: number; y: number }[] }[] = [];
-        for (let row = 0; row < board.length; row++) {
-            for (let column = 0; column < board[row].length; column++) {
-                let possibleSolutions = checkPossibleSolutions(row, column);
+        var possibleMoves = [];
+        for (var row = 0; row < board.length; row++) {
+            for (var column = 0; column < board[row].length; column++) {
+                var possibleSolutions = checkPossibleSolutions(row, column);
                 if (possibleSolutions.length > 0) {
-                    possibleMoves.push({ location: { x: row, y: column }, to: possibleSolutions.map((x) => ({ x: x[0], y: x[1] })) });
+                    possibleMoves.push({ location: { x: row, y: column }, to: possibleSolutions.map(function (x) { return ({ x: x[0], y: x[1] }); }) });
                 }
             }
         }
         return possibleMoves;
     }
-
-    function MovePiece({ location, to }: { location: { x: number; y: number }; to: { x: number; y: number } }) {
+    function MovePiece(_a) {
+        var location = _a.location, to = _a.to;
         board[location.x][location.y] = false;
         // cwords between location and to
-        let x = (to.x + location.x) / 2;
-        let y = (to.y + location.y) / 2;
+        var x = (to.x + location.x) / 2;
+        var y = (to.y + location.y) / 2;
         board[x][y] = false;
-
         board[to.x][to.y] = true;
     }
-
     function CalculatePieces() {
-        let pieces = 0;
-        for (let row = 0; row < board.length; row++) {
-            for (let column = 0; column < board[row].length; column++) {
+        var pieces = 0;
+        for (var row = 0; row < board.length; row++) {
+            for (var column = 0; column < board[row].length; column++) {
                 if (board[row][column] === true) {
                     pieces++;
                 }
@@ -106,29 +105,25 @@ let mainFunc = (boardIn: boolean[][]) => {
         }
         return pieces;
     }
-    let possibleMovesAvailable = CalculateAllPosibleMoves();
-
-    let moves = [];
-
+    var possibleMovesAvailable = CalculateAllPosibleMoves();
+    var moves = [];
     while (possibleMovesAvailable.length > 1 && CalculatePieces() > 1) {
-        let move = possibleMovesAvailable[Math.floor(Math.random() * possibleMovesAvailable.length)];
-        let goTo = move.to[Math.floor(Math.random() * move.to.length)];
-        let obj = {
+        var move = possibleMovesAvailable[Math.floor(Math.random() * possibleMovesAvailable.length)];
+        var goTo = move.to[Math.floor(Math.random() * move.to.length)];
+        var obj = {
             location: move.location,
-            to: goTo,
+            to: goTo
         };
         MovePiece(obj);
         moves.push(obj);
         possibleMovesAvailable = CalculateAllPosibleMoves();
     }
-
     best = CalculatePieces();
     bestBoard = board;
     bestListOfMoves = moves;
-
     //console.log(CalculatePieces())
 };
-let globalItts = 0;
+var globalItts = 0;
 while (globalItts < 9007199254740991) {
     while (bestBoard[5][5] !== true || best !== 1) {
         globalItts++;
@@ -161,10 +156,9 @@ while (globalItts < 9007199254740991) {
         /* 9  */ [null, null, null, null, null, null, null, null, null, null, null],
         /* 10 */ [null, null, null, null, null, null, null, null, null, null, null],
     ];
-    completeBoards = completeBoards.filter((item, index) => completeBoards.indexOf(item) === index);
-    writeFileSync(`Number${completeBoards.length}_${Date.now()}.json`, JSON.stringify(bestListOfMoves));
+    completeBoards = completeBoards.filter(function (item, index) { return completeBoards.indexOf(item) === index; });
+    (0, fs_1.writeFileSync)("Number".concat(completeBoards.length, "_").concat(Date.now(), ".json"), JSON.stringify(bestListOfMoves));
 }
-
 console.log('Best Result');
 console.log(best);
 console.table(bestBoard);
